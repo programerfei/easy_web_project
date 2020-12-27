@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.group.project.dao.SentenceMapper">
+
+<!--  发布句子具体信息  -->
+    <insert id="publicSentence" parameterType="com.group.project.pojo.Sentence">
+        insert into works (username,production,date)
+        values (#{username},#{production},#{date})
+    </insert>
+
+<!--    根据id值得到唯一的发布的内容-->
+    <select id="selectWorks" parameterType="int" resultType="com.group.project.pojo.Sentence">
+        select * from works
+        where id=#{id}
+    </select>
+
+<!--    根据发布的时间查询发布的信息-->
+    <!--    此时可能有多条查询数据-->
+    <select id="selectWorksByDate" parameterType="Date" resultType="com.group.project.pojo.Sentence">
+        select  * from works
+        where date=#{date}
+    </select>
+
+<!--    根据用户名查询用户信息-->
+    <select id="selectUserByName" parameterType="String" resultType="com.group.project.pojo.User">
+        select * from user
+        where username=#{username}
+    </select>
+
+    <!--    根据发布的作者即username查询发布的数据-->
+    <!--    返回用户的头像地址信息-->
+    <!--    此时可能有多条查询数据-->
+    <select id="selectWorksByUsername" parameterType="paramObject" resultType="com.group.project.pojo.Sentence_three">
+        select works.id,works.username,user.nickname,user.signature,user.introductory,user.fileaddress,works.production,works.date
+        from user,works
+        where user.username=works.username and works.username=#{targetObject}
+        order by works.date desc
+        limit #{startIndex},#{pageSize}
+    </select>
+
+    <!--    根据发布的内容进行查询-->
+    <!--    同时返回用户的头像-->
+    <select id="selectWorksByPro" parameterType="paramObject" resultType="com.group.project.pojo.Sentence_three">
+        select works.id,works.username,user.nickname,user.signature,user.introductory,fileaddress,works.production,works.date
+        from user,works
+        where user.username=works.username and works.username!=#{targetObject} and production
+        like concat('%',#{targetObject},'%')
+        order by works.date desc
+        limit #{startIndex},#{pageSize}
+    </select>
+
+<!--    初始化页面展示的句子，每页20条根据发布的最新数据-->
+<!--    此处返回对象的头像地址-->
+    <select id="selectInitWorks" parameterType="map" resultType="com.group.project.pojo.Sentence_three">
+        select works.id,works.username,user.nickname,user.signature,user.introductory,fileaddress,works.production,works.date
+        from user,works
+        where user.username=works.username
+        order by works.date desc
+        limit #{startIndex},#{pageSize}
+    </select>
+
+
+<!--    文件删除-->
+    <delete id="deleteSentence" parameterType="Integer">
+        delete from works
+        where id=#{id}
+    </delete>
+
+<!--    查询数据库所有信息-->
+    <select id="selectTotalSum" resultType="long">
+        select count(*)
+        from works
+    </select>
+
+<!--    根据用户名查询符合数据的总数-->
+    <select id="selectTotalByNameSum" resultType="long" parameterType="String">
+        select count(production)
+        from works
+        where username=#{username}
+    </select>
+
+<!--    根据关键词查询符合数据的总数-->
+    <select id="selectTotalBySentenceSun" parameterType="String" resultType="long">
+        select count(*)
+        from user,works
+        where user.username=works.username and works.username!=#{targetObject} and production
+        like concat('%',#{targetObject},'%')
+    </select>
+
+
+</mapper>
